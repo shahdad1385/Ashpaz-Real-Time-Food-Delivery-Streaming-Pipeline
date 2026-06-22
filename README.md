@@ -54,39 +54,79 @@ historical_data.json ──> [Spark Batch Analytics] ──> Insights (Q3a)
 └── README.md
 ```
 
-## Setup
+## Prerequisites & Installation
 
-### Prerequisites
+### Java 17
 
-- Python 3.10+
-- Java 17 (OpenJDK)
-- PostgreSQL
-- Apache Kafka 3.9+ (KRaft mode, no ZooKeeper required)
-
-### Installation
+Java is required by PySpark.
 
 ```bash
-# Install Python dependencies
-pip install -r requirements.txt
+# Ubuntu/Debian
+sudo apt update && sudo apt install -y openjdk-17-jdk
 
-# Verify Java
+# macOS (Homebrew)
+brew install openjdk@17
+
+# Verify
 java -version
 ```
 
-### Start Kafka (KRaft mode)
+### Python Dependencies
 
 ```bash
+pip install -r requirements.txt
+```
+
+This installs PySpark, confluent-kafka (Kafka Python client), psycopg2-binary (PostgreSQL adapter), and visualization libraries (pandas, plotly, matplotlib, seaborn).
+
+### PostgreSQL
+
+```bash
+# Ubuntu/Debian
+sudo apt install -y postgresql
+sudo systemctl start postgresql
+sudo systemctl enable postgresql
+
+# macOS (Homebrew)
+brew install postgresql@16
+brew services start postgresql@16
+```
+
+Create the project database and user:
+
+```bash
+sudo -u postgres psql -c "CREATE USER ashpaz_user WITH PASSWORD 'password123';"
+sudo -u postgres psql -c "CREATE DATABASE ashpaz_db OWNER ashpaz_user;"
+sudo -u postgres psql -d ashpaz_db -c "GRANT ALL ON SCHEMA public TO ashpaz_user;"
+```
+
+### Apache Kafka (KRaft mode)
+
+Modern Kafka (3.3+) uses KRaft mode and no longer requires ZooKeeper.
+
+```bash
+# Download and extract
+cd /tmp
+curl -L "https://dlcdn.apache.org/kafka/3.9.2/kafka_2.13-3.9.2.tgz" -o kafka.tgz
+tar -xzf kafka.tgz
+export KAFKA_HOME=/tmp/kafka_2.13-3.9.2
+
+# Initialize KRaft storage
 KAFKA_CLUSTER_ID=$($KAFKA_HOME/bin/kafka-storage.sh random-uuid)
 $KAFKA_HOME/bin/kafka-storage.sh format -t $KAFKA_CLUSTER_ID \
     -c $KAFKA_HOME/config/kraft/server.properties
+
+# Start Kafka
 $KAFKA_HOME/bin/kafka-server-start.sh -daemon \
     $KAFKA_HOME/config/kraft/server.properties
+
+# Verify
+$KAFKA_HOME/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list
 ```
 
-### Create Kafka Topics
+Create the required topics:
 
 ```bash
-python3 src/kafka/Ashpaz.py  # creates topics on startup, or:
 $KAFKA_HOME/bin/kafka-topics.sh --bootstrap-server localhost:9092 \
     --create --topic ashpaz.order --partitions 1 --replication-factor 1
 $KAFKA_HOME/bin/kafka-topics.sh --bootstrap-server localhost:9092 \
@@ -97,16 +137,9 @@ $KAFKA_HOME/bin/kafka-topics.sh --bootstrap-server localhost:9092 \
     --create --topic orders.fraud_alerts --partitions 1 --replication-factor 1
 ```
 
-### Setup PostgreSQL
-
-```bash
-sudo -u postgres psql -c "CREATE USER ashpaz_user WITH PASSWORD 'password123';"
-sudo -u postgres psql -c "CREATE DATABASE ashpaz_db OWNER ashpaz_user;"
-```
-
 ---
 
-## Q1: Database Design & Analytics (100 pts)
+## Q1: Database Design & Analytics
 
 Normalized relational schema built from a flat Zomato restaurant CSV into three tables with proper primary/foreign key relationships.
 
@@ -138,7 +171,7 @@ psql -h localhost -U ashpaz_user -d ashpaz_db -f src/db/data_loader_queries.sql
 
 ---
 
-## Q2: Kafka Consumer Implementation (100 pts)
+## Q2: Kafka Consumer Implementation
 
 Stateless order validation consuming from `ashpaz.order`. Each order is validated against three business rules without any database access:
 
@@ -162,9 +195,9 @@ python3 src/kafka/Ashpaz.py
 
 ---
 
-## Q3: PySpark Processing Layer (100 pts)
+## Q3: PySpark Processing Layer
 
-### Batch Analytics (50 pts)
+### Batch Analytics
 
 Processes `historical_data.json` with PySpark to produce:
 
@@ -176,7 +209,7 @@ Processes `historical_data.json` with PySpark to produce:
 python3 src/spark/spark_batch_analytics.py
 ```
 
-### Real-Time Fraud Detection (50 pts)
+### Real-Time Fraud Detection
 
 Spark Structured Streaming application consuming from `ashpaz.valid` with time-based windowing and checkpointing:
 
