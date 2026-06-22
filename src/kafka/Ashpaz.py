@@ -31,7 +31,7 @@ logging.basicConfig(
 # ------------------------------
 KAFKA_BROKER = os.getenv("KAFKA_BROKER", "localhost:9092")
 TOPIC = os.getenv("KAFKA_TOPIC", "ashpaz.order")
-CSV_PATH = os.getenv("RESTAURANT_CSV", "zomato.csv")
+CSV_PATH = os.getenv("RESTAURANT_CSV", os.path.join(os.path.dirname(__file__), "..", "..", "zomato.csv"))
 
 EVENT_RATE = float(os.getenv("EVENT_RATE", 800))
 PEAK_MULTIPLIER = float(os.getenv("PEAK_MULTIPLIER", 3.0))

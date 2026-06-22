@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import os
 import csv
 import psycopg2
 
@@ -10,7 +11,7 @@ conn_params = {
     "password": "password123"
 }
 
-csv_file_path = "zomato.csv"
+csv_file_path = os.path.join(os.path.dirname(__file__), "..", "..", "zomato.csv")
 
 def run_pipeline():
     try:

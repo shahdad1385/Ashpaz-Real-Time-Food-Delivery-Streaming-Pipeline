@@ -17,7 +17,7 @@ def run_batch_pipeline():
     print(" Initializing Apache Spark In-Memory Analytics Cluster...")
     spark = create_spark_session()
     
-    input_file = "historical_data.json"
+    input_file = os.path.join(os.path.dirname(__file__), "..", "..", "historical_data.json")
     if not os.path.exists(input_file):
         raise FileNotFoundError(f"Missing file: '{input_file}'. Ensure it resides in your workspace folder.")
     

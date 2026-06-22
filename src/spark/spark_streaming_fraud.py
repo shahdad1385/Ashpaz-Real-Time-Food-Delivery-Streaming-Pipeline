@@ -102,7 +102,7 @@ def process_stream_pipeline():
     # EXECUTE STREAM PRODUCTION
     print("Live Threat Isolation Rules Activated. Running Analytics queries...")
     
-    checkpoint_path = "./spark_checkpoints/fraud_detection"
+    checkpoint_path = os.path.join(os.path.dirname(__file__), "..", "..", "spark_checkpoints", "fraud_detection")
     
     # Primary production output loop to Kafka
     query = combined_alerts.writeStream \
